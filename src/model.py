@@ -1,7 +1,7 @@
 import os
 import pickle
 
-MODEL_FOLDER = os.path.relpath("models", "simple-mlops-api")
+MODEL_FOLDER = os.path.relpath("models", os.getcwd())
 
 def load_model(model_path: str = "model.pkl"):
     model_path = os.path.join(MODEL_FOLDER, model_path)
@@ -9,5 +9,8 @@ def load_model(model_path: str = "model.pkl"):
         model = pickle.load(file)
     return model
 
-def load_encode(encoder_path: str = "ohe.pkl"):
-    encoder_path
+def load_encoder(encoder_path: str = "ohe.pkl"):
+    encoder_path = os.path.join(MODEL_FOLDER, encoder_path)
+    with open(encoder_path, "rb") as file:
+        encoder = pickle.load(file)
+    return encoder
