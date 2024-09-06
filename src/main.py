@@ -5,19 +5,19 @@ from .person_data import Person
 import pandas as pd
 from .model import load_model, load_encoder
 
-app = FastAPI()
-
-bearer = HTTPBearer()
-
 ml_models = {}
 
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
     Startup event to load the models
     """
     ml_models["ohe"] = load_encoder()
     ml_models["models"] = load_model()
+    yield
+
+    # Cleanup
+    ml_models.clear()
 
 def get_username_from_token(token):
     if token == "abc123":
@@ -35,6 +35,9 @@ async def validate_token(credentials: HTTPAuthorizationCredentials = Depends(bea
         raise HTTPException(status_code=401, detail="Invalid Token")
     
     return {"username": username}
+
+app = FastAPI(lifespan=lifespan)
+bearer = HTTPBearer()
 
 @app.get("/")
 async def root():
@@ -72,7 +75,7 @@ async def predict(
     ohe = ml_models["ohe"]
     model = ml_models["models"]
 
-    df_person = pd.DataFrame([person.dict()])
+    df_person = pd.DataFrame([person.model_dump()])
 
     person_t = ohe.transform(df_person)
     pred = model.predict(person_t)[0]
